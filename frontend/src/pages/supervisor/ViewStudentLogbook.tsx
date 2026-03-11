@@ -1,0 +1,93 @@
+import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Card, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { api } from '@/services/api';
+
+interface LogbookEntry {
+  id: number;
+  week_number: number;
+  monday_job_assigned: string;
+  monday_skill_acquired: string;
+  tuesday_job_assigned: string;
+  tuesday_skill_acquired: string;
+  wednesday_job_assigned: string;
+  wednesday_skill_acquired: string;
+  thursday_job_assigned: string;
+  thursday_skill_acquired: string;
+  friday_job_assigned: string;
+  friday_skill_acquired: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface ElogbookResponse {
+  index_number: string;
+  entries: LogbookEntry[];
+}
+
+export function ViewStudentLogbook() {
+  const { indexNumber } = useParams<{ indexNumber: string }>();
+  const [data, setData] = useState<ElogbookResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!indexNumber) return;
+    api
+      .get<ElogbookResponse>(`/elogbook/${encodeURIComponent(indexNumber)}`)
+      .then(setData)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setLoading(false));
+  }, [indexNumber]);
+
+  if (!indexNumber) return <p className="text-slate-500">Missing index number.</p>;
+  if (loading) return <p className="text-slate-500">Loading logbook...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
+  if (!data) return null;
+
+  const entries = data.entries ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-slate-900">Student E-Logbook</h1>
+          <p className="mt-1 text-slate-500">Index: {data.index_number}</p>
+        </div>
+        <Link to="/supervisor/dashboard">
+          <Button variant="outline">Back to Dashboard</Button>
+        </Link>
+      </div>
+      <Card>
+        <CardHeader title={`Entries (${entries.length} weeks)`} />
+        {entries.length === 0 ? (
+          <p className="text-slate-500">No logbook entries yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {entries.map((entry) => (
+              <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <h3 className="font-semibold text-slate-800">Week {entry.week_number}</h3>
+                <dl className="mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                  <div><dt className="text-slate-500">Monday job</dt><dd>{entry.monday_job_assigned || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Monday skill</dt><dd>{entry.monday_skill_acquired || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Tuesday job</dt><dd>{entry.tuesday_job_assigned || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Tuesday skill</dt><dd>{entry.tuesday_skill_acquired || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Wednesday job</dt><dd>{entry.wednesday_job_assigned || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Wednesday skill</dt><dd>{entry.wednesday_skill_acquired || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Thursday job</dt><dd>{entry.thursday_job_assigned || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Thursday skill</dt><dd>{entry.thursday_skill_acquired || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Friday job</dt><dd>{entry.friday_job_assigned || '-'}</dd></div>
+                  <div><dt className="text-slate-500">Friday skill</dt><dd>{entry.friday_skill_acquired || '-'}</dd></div>
+                </dl>
+                {entry.updated_at && (
+                  <p className="mt-2 text-xs text-slate-400">Updated: {entry.updated_at}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

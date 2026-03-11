@@ -1,0 +1,5 @@
+# Route all API requests to index.php (REQUEST_URI is preserved for routing)
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]

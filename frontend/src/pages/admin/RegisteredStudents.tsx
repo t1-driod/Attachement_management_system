@@ -1,0 +1,90 @@
+import { useState, useEffect } from 'react';
+import { Card, CardHeader } from '@/components/ui/Card';
+import { DataTable, type Column } from '@/components/ui/DataTable';
+import { Button } from '@/components/ui/Button';
+import { api } from '@/services/api';
+
+interface StudentRow {
+  index_number: string;
+  first_name: string;
+  last_name: string;
+  programme: string;
+  level: string;
+  session: string;
+}
+
+const columns: Column<StudentRow>[] = [
+  { key: 'index_number', header: 'Index Number' },
+  { key: 'first_name', header: 'First Name' },
+  { key: 'last_name', header: 'Last Name' },
+  { key: 'programme', header: 'Programme' },
+  { key: 'level', header: 'Level' },
+  { key: 'session', header: 'Session' },
+];
+
+export function RegisteredStudents() {
+  const [filter, setFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [rows, setRows] = useState<StudentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStudents = () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filter) params.set('filter', filter);
+    if (searchTerm) params.set('search', searchTerm);
+    api
+      .get<StudentRow[]>(`/admin/students?${params.toString()}`)
+      .then(setRows)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const filteredRows = rows;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-display font-bold text-slate-900">Registered Students</h1>
+        <p className="mt-1 text-slate-500">View and search industrial registration records</p>
+      </div>
+      <Card>
+        <CardHeader title="Students" />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="">Filter by</option>
+            <option value="first_name">First Name</option>
+            <option value="last_name">Last Name</option>
+            <option value="index_number">Index Number</option>
+            <option value="programme">Programme</option>
+            <option value="level">Level</option>
+            <option value="session">Session</option>
+          </select>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search term..."
+            className="w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <Button variant="primary" size="sm" onClick={fetchStudents}>Search</Button>
+        </div>
+        {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+        {loading ? (
+          <p className="text-slate-500">Loading...</p>
+        ) : (
+          <DataTable columns={columns} data={filteredRows} keyField="index_number" emptyMessage="No students found." />
+        )}
+      </Card>
+    </div>
+  );
+}
