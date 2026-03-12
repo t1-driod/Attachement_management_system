@@ -1,5 +1,11 @@
 <?php
 
+// Allow AJAX uploads from the React dev server (http://localhost:3000)
+if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] === 'http://localhost:3000') {
+    header('Access-Control-Allow-Origin: http://localhost:3000');
+    header('Access-Control-Allow-Credentials: true');
+}
+
 include 'database_connection/database_connection.php';
 
 $student_fname = $_COOKIE["student_first_name"];

@@ -5,8 +5,13 @@
  */
 
 $id = 0;
+// Prefer path param: /admin/orientation-detail/{id}
 if (!empty($segments) && $segments[0] === 'admin' && ($segments[1] ?? '') === 'orientation-detail' && !empty($segments[2])) {
     $id = (int)$segments[2];
+}
+// Fallback: allow ?id=123 for extra safety
+if ($id <= 0 && isset($_GET['id'])) {
+    $id = (int)$_GET['id'];
 }
 
 if ($id <= 0) {

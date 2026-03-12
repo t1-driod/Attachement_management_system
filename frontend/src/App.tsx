@@ -39,6 +39,8 @@ import { StudentDashboard } from './pages/student/StudentDashboard';
 import { InstructionsPage } from './pages/student/InstructionsPage';
 import { OrientationChecklistPage } from './pages/student/OrientationChecklistPage';
 import { ELogbookPage } from './pages/student/ELogbookPage';
+import { SubmitContractPage } from './pages/student/SubmitContractPage';
+import { SubmitReportPage } from './pages/student/SubmitReportPage';
 import { SupervisorAssessmentLoginPage } from './pages/student/SupervisorLoginPage';
 import { SupervisorGradeFormPage } from './pages/student/SupervisorGradeFormPage';
 
@@ -116,6 +118,8 @@ export default function App() {
         <Route path="instructions" element={<InstructionsPage />} />
         <Route path="orientation" element={<OrientationChecklistPage />} />
         <Route path="elogbook" element={<ELogbookPage />} />
+        <Route path="contract" element={<SubmitContractPage />} />
+        <Route path="report" element={<SubmitReportPage />} />
         <Route path="supervisor/visiting" element={<SupervisorAssessmentLoginPage />} />
         <Route path="supervisor/visiting/grade" element={<SupervisorGradeFormPage />} />
         <Route path="supervisor/company" element={<SupervisorAssessmentLoginPage />} />

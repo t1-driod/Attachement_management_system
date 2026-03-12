@@ -50,8 +50,11 @@ export function DataTable<T extends object>({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {data.map((row, idx) => (
-              <tr key={String(getValue(row, keyField)) ?? idx} className="hover:bg-slate-50">
+            {data.map((row, idx) => {
+              const rawKey = getValue(row, keyField);
+              const safeKey = rawKey != null && rawKey !== '' ? String(rawKey) : `row-${idx}`;
+              return (
+              <tr key={safeKey} className="hover:bg-slate-50">
                 {columns.map((col) => (
                   <td
                     key={String(col.key)}
@@ -63,7 +66,7 @@ export function DataTable<T extends object>({
                   </td>
                 ))}
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

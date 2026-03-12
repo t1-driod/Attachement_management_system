@@ -9,8 +9,8 @@ const quickLinks = [
   { to: '/student/instructions', label: 'Instructions', description: 'Read post-login instructions', external: false },
   { to: '/student/elogbook', label: 'E-Logbook', description: 'Submit weekly logbook entries', external: false },
   { to: '/student/orientation', label: 'Orientation Checklist', description: 'Complete orientation checklist', external: false },
-  { to: `${LEGACY_BASE}/submit_contract.php`, label: 'Submit Contract', description: 'Upload attachment contract', external: true },
-  { to: `${LEGACY_BASE}/submit_report/submit_report.php`, label: 'Submit Report', description: 'Upload final report', external: true },
+  { to: '/student/contract', label: 'Submit Contract', description: 'Upload attachment contract', external: false },
+  { to: '/student/report', label: 'Submit Report', description: 'Upload final report', external: false },
   { to: `${LEGACY_BASE}/student_assumption/student_assumption.php`, label: 'Student Assumption', description: 'Set company and region', external: true },
 ];
 
