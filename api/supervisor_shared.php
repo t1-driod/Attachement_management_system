@@ -178,3 +178,60 @@ function iasms_get_supervisor_students_and_summary(mysqli $conn, string $supervi
     return [$students, $summary];
 }
 
+/**
+ * Check if a student (by index_number) is assigned to a lecturer (by name) via assigned_lecturers.
+ *
+ * @param mysqli $conn
+ * @param string $studentIndex
+ * @param string $lecturerName
+ * @return bool
+ */
+function iasms_is_student_assigned_to_lecturer(mysqli $conn, string $studentIndex, string $lecturerName): bool
+{
+    $studentIndex = trim($studentIndex);
+    $lecturerName = trim($lecturerName);
+    if ($studentIndex === '' || $lecturerName === '') {
+        return false;
+    }
+    $idx_esc = mysqli_real_escape_string($conn, $studentIndex);
+    $r = mysqli_query(
+        $conn,
+        "SELECT i.faculty,
+                COALESCE(NULLIF(TRIM(sa.company_region),''), i.attachment_region) AS region
+         FROM industrial_registration i
+         LEFT JOIN students_assumption sa ON sa.index_number = i.index_number
+         WHERE i.index_number = '$idx_esc' LIMIT 1"
+    );
+    if (!$r || mysqli_num_rows($r) !== 1) {
+        return false;
+    }
+    $row = mysqli_fetch_assoc($r);
+    $faculty = trim($row['faculty'] ?? '');
+    $region = trim($row['region'] ?? '');
+    if ($region === '') {
+        return false;
+    }
+    $faculty_db_map = [
+        'AGR' => 'agr', 'ARTS' => 'arts', 'COM' => 'com', 'FAST' => 'com', 'CIE' => 'cie', 'EDU' => 'edu',
+        'ENG' => 'eng', 'FOE' => 'eng', 'LAW' => 'law', 'MED' => 'med', 'SCI' => 'sci', 'FBNE' => 'sci',
+        'SOC' => 'soc', 'FBMS' => 'soc', 'VET' => 'vet', 'FHAS' => 'vet',
+    ];
+    $fac_key = $faculty_db_map[strtoupper($faculty)] ?? strtolower(preg_replace('/\s+/', '', $faculty));
+    if ($fac_key === '') {
+        return false;
+    }
+    $fac_key = strtolower($fac_key);
+    $region_esc = mysqli_real_escape_string($conn, $region);
+    $name_esc = mysqli_real_escape_string($conn, $lecturerName);
+    $col_first = 'first_supervisor_' . $fac_key;
+    $col_second = 'second_supervisor_' . $fac_key;
+    $check = mysqli_query(
+        $conn,
+        "SELECT 1 FROM assigned_lecturers
+         WHERE regions = '$region_esc'
+           AND (BINARY `$col_first` = '$name_esc' OR BINARY `$col_second` = '$name_esc')
+         LIMIT 1"
+    );
+    return $check && mysqli_num_rows($check) > 0;
+}
+

@@ -52,21 +52,28 @@ export function DataTable<T extends object>({
           <tbody className="divide-y divide-slate-200 bg-white">
             {data.map((row, idx) => {
               const rawKey = getValue(row, keyField);
-              const safeKey = rawKey != null && rawKey !== '' ? String(rawKey) : `row-${idx}`;
+              // Ensure keys are unique even if the keyField contains duplicate or falsy values
+              const safeKey =
+                rawKey != null && rawKey !== '' ? `${String(rawKey)}-${idx}` : `row-${idx}`;
               return (
-              <tr key={safeKey} className="hover:bg-slate-50">
-                {columns.map((col) => (
-                  <td
-                    key={String(col.key)}
-                    className={`px-4 py-3 text-slate-800 ${col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'}`}
-                  >
-                    {col.render
-                      ? col.render(row)
-                      : String(getValue(row, col.key) ?? '')}
-                  </td>
-                ))}
-              </tr>
-            )})}
+                <tr key={safeKey} className="hover:bg-slate-50">
+                  {columns.map((col) => (
+                    <td
+                      key={String(col.key)}
+                      className={`px-4 py-3 text-slate-800 ${
+                        col.align === 'center'
+                          ? 'text-center'
+                          : col.align === 'right'
+                          ? 'text-right'
+                          : 'text-left'
+                      }`}
+                    >
+                      {col.render ? col.render(row) : String(getValue(row, col.key) ?? '')}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

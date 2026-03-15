@@ -2,7 +2,48 @@
 /**
  * IASMS REST API entry point.
  * All requests to /iasms/api/* are routed here. Expects JSON for POST; returns JSON.
+ * File-download routes are handled before sending JSON headers.
  */
+session_start();
+
+require __DIR__ . '/../database_connection/database_connection.php';
+
+$uri = $_SERVER['REQUEST_URI'] ?? '';
+$base = '/iasms/api';
+$path = (strpos($uri, $base) === 0) ? trim(substr($uri, strlen($base)), '/?') : '';
+$path = preg_replace('/\?.*/', '', $path);
+$segments = $path ? explode('/', $path) : [];
+
+// Route: admin contract file download (must run before JSON headers)
+// Supports:
+// - /iasms/api/admin/contracts/download?id=123
+// - /iasms/api/admin/contracts/download/123
+if (!empty($segments[0]) && $segments[0] === 'admin' && ($segments[1] ?? '') === 'contracts' && ($segments[2] ?? '') === 'download') {
+    if (empty($_GET['id']) && !empty($segments[3]) && ctype_digit($segments[3])) {
+        $_GET['id'] = (int)$segments[3];
+    }
+    require __DIR__ . '/admin_contracts_download.php';
+    exit;
+}
+
+// Route: student profile photo (serve image, no JSON)
+if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'profile' && ($segments[2] ?? '') === 'photo') {
+    require __DIR__ . '/student_profile_photo.php';
+    exit;
+}
+
+// Route: admin view student profile photo (serve image, no JSON)
+if (!empty($segments[0]) && $segments[0] === 'admin' && ($segments[1] ?? '') === 'student-profile' && !empty($segments[2]) && ($segments[3] ?? '') === 'photo') {
+    require __DIR__ . '/admin_student_profile_photo.php';
+    exit;
+}
+
+// Route: supervisor view student profile photo (serve image, no JSON)
+if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? '') === 'student-profile' && !empty($segments[2]) && ($segments[3] ?? '') === 'photo') {
+    require __DIR__ . '/supervisor_student_profile_photo.php';
+    exit;
+}
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: http://localhost:3000');
 header('Access-Control-Allow-Credentials: true');
@@ -13,16 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
-
-session_start();
-
-require __DIR__ . '/../database_connection/database_connection.php';
-
-$uri = $_SERVER['REQUEST_URI'] ?? '';
-$base = '/iasms/api';
-$path = (strpos($uri, $base) === 0) ? trim(substr($uri, strlen($base)), '/?') : '';
-$path = preg_replace('/\?.*/', '', $path);
-$segments = $path ? explode('/', $path) : [];
 
 // Route: auth
 if (!empty($segments[0]) && $segments[0] === 'auth') {
@@ -58,6 +89,12 @@ if (!empty($segments[0]) && $segments[0] === 'admin' && ($segments[1] ?? '') ===
 // Route: admin students (industrial_registration)
 if (!empty($segments[0]) && $segments[0] === 'admin' && ($segments[1] ?? '') === 'students') {
     require __DIR__ . '/admin_students.php';
+    exit;
+}
+
+// Route: admin student profile (full details for any student)
+if (!empty($segments[0]) && $segments[0] === 'admin' && ($segments[1] ?? '') === 'student-profile' && !empty($segments[2])) {
+    require __DIR__ . '/admin_student_profile.php';
     exit;
 }
 
@@ -139,6 +176,12 @@ if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? ''
     exit;
 }
 
+// Route: supervisor student profile (full details for one assigned student)
+if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? '') === 'student-profile' && !empty($segments[2])) {
+    require __DIR__ . '/supervisor_student_profile.php';
+    exit;
+}
+
 // Route: supervisor orientation checklists (assigned students only)
 if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? '') === 'orientation') {
     require __DIR__ . '/supervisor_orientation.php';
@@ -175,6 +218,12 @@ if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? ''
     exit;
 }
 
+// Route: supervisor assessment passwords (GET status, POST set visiting/company password)
+if (!empty($segments[0]) && $segments[0] === 'supervisor' && ($segments[1] ?? '') === 'assessment-passwords') {
+    require __DIR__ . '/supervisor_assessment_passwords.php';
+    exit;
+}
+
 // Route: elogbook entries for a student
 if (!empty($segments[0]) && $segments[0] === 'elogbook' && !empty($segments[1])) {
     require __DIR__ . '/elogbook_student.php';
@@ -196,6 +245,30 @@ if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') =
 // Route: student grades (GET, requires student session)
 if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'grades') {
     require __DIR__ . '/student_grades.php';
+    exit;
+}
+
+// Route: student contract (GET status, POST upload) — uses student_contracts table only
+if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'contract') {
+    require __DIR__ . '/student_contract.php';
+    exit;
+}
+
+// Route: student industrial registration (GET status, POST register)
+if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'registration') {
+    require __DIR__ . '/student_registration.php';
+    exit;
+}
+
+// Route: student assumption of duty (GET status, POST submit)
+if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'assumption') {
+    require __DIR__ . '/student_assumption.php';
+    exit;
+}
+
+// Route: student account profile (GET profile, POST update + optional photo)
+if (!empty($segments[0]) && $segments[0] === 'student' && ($segments[1] ?? '') === 'profile' && ($segments[2] ?? '') === '') {
+    require __DIR__ . '/student_profile.php';
     exit;
 }
 

@@ -12,6 +12,7 @@ interface ContractRow {
   submission_date: string | null;
   admin_comment: string;
   original_filename: string;
+  contract_file: string;
 }
 
 const columns: Column<ContractRow>[] = [
@@ -19,7 +20,23 @@ const columns: Column<ContractRow>[] = [
   { key: 'student_name', header: 'Student Name' },
   { key: 'status', header: 'Status' },
   { key: 'submission_date', header: 'Submitted At' },
-  { key: 'original_filename', header: 'File' },
+  {
+    key: 'original_filename',
+    header: 'File',
+    render: (row) =>
+      row.contract_file ? (
+        <a
+          href={`/api/admin/contracts/download?id=${row.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-600 hover:underline"
+        >
+          {row.original_filename || 'View'}
+        </a>
+      ) : (
+        row.original_filename
+      ),
+  },
 ];
 
 export function ManageContracts() {
@@ -44,9 +61,33 @@ export function ManageContracts() {
   }, [statusFilter]);
 
   const handleAction = async (contractId: number, action: 'approve' | 'reject') => {
+    const id = Number(contractId);
+    if (!Number.isInteger(id) || id < 1) {
+      setError('Invalid contract id. Please refresh the page.');
+      return;
+    }
     setActionLoading(contractId);
+    setError(null);
     try {
-      await api.post('/admin/contracts', { action, contract_id: contractId, admin_comment: '' });
+      // Send in URL so backend gets them even if POST body is not forwarded (e.g. dev proxy)
+      const query = `?contract_id=${id}&action=${encodeURIComponent(action)}`;
+      const form = new URLSearchParams();
+      form.set('contract_id', String(id));
+      form.set('action', action);
+      form.set('admin_comment', '');
+      const res = await fetch(`/api/admin/contracts${query}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: form.toString(),
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed: ${res.status}`);
+      }
+      if (!data.success) {
+        throw new Error(data.error || 'Action failed');
+      }
       fetchContracts();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Action failed');

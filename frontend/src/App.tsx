@@ -32,7 +32,10 @@ import { SupervisorELogbooks } from './pages/supervisor/SupervisorELogbooks';
 import { SupervisorStudentAssumptions } from './pages/supervisor/SupervisorStudentAssumptions';
 import { SupervisorContracts } from './pages/supervisor/SupervisorContracts';
 import { SupervisorReports } from './pages/supervisor/SupervisorReports';
+import { SupervisorAssessmentPasswordsPage } from './pages/supervisor/SupervisorAssessmentPasswordsPage';
+import { StudentProfilePage } from './pages/supervisor/StudentProfilePage';
 import { AdminViewLogbook } from './pages/admin/AdminViewLogbook';
+import { AdminStudentProfilePage } from './pages/admin/AdminStudentProfilePage';
 
 // Student
 import { StudentDashboard } from './pages/student/StudentDashboard';
@@ -41,8 +44,11 @@ import { OrientationChecklistPage } from './pages/student/OrientationChecklistPa
 import { ELogbookPage } from './pages/student/ELogbookPage';
 import { SubmitContractPage } from './pages/student/SubmitContractPage';
 import { SubmitReportPage } from './pages/student/SubmitReportPage';
+import { RegisterPage } from './pages/student/RegisterPage';
+import { SubmitAssumptionPage } from './pages/student/SubmitAssumptionPage';
 import { SupervisorAssessmentLoginPage } from './pages/student/SupervisorLoginPage';
 import { SupervisorGradeFormPage } from './pages/student/SupervisorGradeFormPage';
+import { StudentProfileEditPage } from './pages/student/StudentProfileEditPage';
 
 function ProtectedRoute({
   children,
@@ -78,6 +84,7 @@ export default function App() {
         <Route path="students" element={<RegisteredStudents />} />
         <Route path="orientation" element={<OrientationChecklists />} />
         <Route path="elogbooks" element={<ELogbooks />} />
+        <Route path="students/:indexNumber" element={<AdminStudentProfilePage />} />
         <Route path="logbook/:indexNumber" element={<AdminViewLogbook />} />
         <Route path="contracts" element={<ManageContracts />} />
         <Route path="reports" element={<SubmittedReports />} />
@@ -98,6 +105,8 @@ export default function App() {
       >
         <Route index element={<Navigate to="/supervisor/dashboard" replace />} />
         <Route path="dashboard" element={<SupervisorDashboard />} />
+        <Route path="passwords" element={<SupervisorAssessmentPasswordsPage />} />
+        <Route path="student/:indexNumber" element={<StudentProfilePage />} />
         <Route path="logbook/:indexNumber" element={<ViewStudentLogbook />} />
         <Route path="orientation" element={<SupervisorOrientationChecklists />} />
         <Route path="elogbooks" element={<SupervisorELogbooks />} />
@@ -120,6 +129,9 @@ export default function App() {
         <Route path="elogbook" element={<ELogbookPage />} />
         <Route path="contract" element={<SubmitContractPage />} />
         <Route path="report" element={<SubmitReportPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="profile" element={<StudentProfileEditPage />} />
+        <Route path="assumption" element={<SubmitAssumptionPage />} />
         <Route path="supervisor/visiting" element={<SupervisorAssessmentLoginPage />} />
         <Route path="supervisor/visiting/grade" element={<SupervisorGradeFormPage />} />
         <Route path="supervisor/company" element={<SupervisorAssessmentLoginPage />} />

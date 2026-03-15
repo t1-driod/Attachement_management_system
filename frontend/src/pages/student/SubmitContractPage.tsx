@@ -1,18 +1,35 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { api } from '@/services/api';
 
 type StatusType = 'idle' | 'success' | 'error';
 
-const LEGACY_BASE = import.meta.env.DEV ? 'http://localhost/iasms' : '';
+interface ContractStatus {
+  submitted: boolean;
+  status?: 'pending' | 'approved' | 'rejected';
+  submission_date?: string | null;
+  original_filename?: string;
+  admin_comment?: string;
+}
 
 export function SubmitContractPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [contractStatus, setContractStatus] = useState<ContractStatus | null>(null);
   const [status, setStatus] = useState<StatusType>('idle');
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<ContractStatus>('/student/contract')
+      .then((data) => setContractStatus(data))
+      .catch(() => setContractStatus({ submitted: false }))
+      .finally(() => setLoadingStatus(false));
+  }, []);
 
   const handleChooseFile = () => {
     fileInputRef.current?.click();
@@ -35,44 +52,46 @@ export function SubmitContractPage() {
 
     const formData = new FormData();
     formData.append('contract_file', file);
-    formData.append('submit_contract', '1');
 
     setUploading(true);
     setStatus('idle');
     setMessage(null);
 
     try {
-      const res = await fetch(`${LEGACY_BASE}/submit_contract.php`, {
+      const baseUrl = '/api';
+      const res = await fetch(`${baseUrl}/student/contract`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
       });
 
       const text = await res.text();
+      let data: { success?: boolean; error?: string; message?: string } = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // ignore
+      }
 
       if (!res.ok) {
         setStatus('error');
-        setMessage('Upload failed. Please try again.');
+        setMessage(typeof data.error === 'string' ? data.error : 'Upload failed. Please try again.');
         return;
       }
 
-      let feedback = 'Contract submitted. You can refresh this page later to confirm status.';
-      if (text.includes('Contract submitted successfully')) {
-        feedback = 'Contract submitted successfully! Your contract is pending approval.';
-      } else if (text.includes('Only PDF files are allowed')) {
-        feedback = 'Only PDF files are allowed.';
-      } else if (text.includes('File size must be less than 5MB')) {
-        feedback = 'File size must be less than 5MB.';
-      } else if (text.includes('Please select a contract file to upload')) {
-        feedback = 'Please select a contract file to upload.';
-      }
-
-      setStatus(text.includes('successfully') ? 'success' : 'success');
+      const feedback = data.message ?? 'Contract submitted. Your contract is pending approval.';
+      setStatus('success');
       setMessage(feedback);
       setFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      setContractStatus({
+        submitted: true,
+        status: 'pending',
+        submission_date: new Date().toISOString(),
+        original_filename: file.name,
+      });
     } catch (err) {
       console.error(err);
       setStatus('error');
@@ -113,6 +132,46 @@ export function SubmitContractPage() {
         </div>
       )}
 
+      {loadingStatus ? (
+        <p className="text-slate-500">Loading contract status…</p>
+      ) : contractStatus?.submitted ? (
+        <Card padding="lg" className="bg-white">
+          <h2 className="text-lg font-semibold text-slate-800">Contract submission status</h2>
+          <p className="mt-2 text-slate-600">You have already submitted your industrial attachment contract.</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full px-3 py-1 text-sm font-medium ${
+                contractStatus.status === 'approved'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : contractStatus.status === 'rejected'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-amber-100 text-amber-800'
+              }`}
+            >
+              {contractStatus.status === 'approved'
+                ? 'Approved'
+                : contractStatus.status === 'rejected'
+                ? 'Rejected'
+                : 'Pending approval'}
+            </span>
+            {contractStatus.original_filename && (
+              <span className="text-sm text-slate-500">File: {contractStatus.original_filename}</span>
+            )}
+          </div>
+          {contractStatus.admin_comment && (
+            <p className="mt-3 text-sm text-slate-600">
+              <span className="font-medium">Admin comment:</span> {contractStatus.admin_comment}
+            </p>
+          )}
+          <p className="mt-3 text-sm text-slate-500">
+            {contractStatus.status === 'approved'
+              ? 'Your contract has been approved. You may proceed with your industrial attachment.'
+              : contractStatus.status === 'rejected'
+              ? 'Your contract was rejected. Please contact the administration for more details.'
+              : 'Your contract is being reviewed. You will be notified once it is approved.'}
+          </p>
+        </Card>
+      ) : (
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <Card padding="lg" className="flex flex-col justify-between bg-white">
           <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center hover:border-primary-300 hover:bg-primary-50/40">
@@ -184,6 +243,7 @@ export function SubmitContractPage() {
           </Card>
         </div>
       </form>
+      )}
     </div>
   );
 }

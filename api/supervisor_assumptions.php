@@ -23,7 +23,8 @@ $in_list = "'" . implode(
     )
 ) . "'";
 
-$q = "SELECT index_number, first_name, last_name, programme, level, session, company_name, company_region
+$q = "SELECT index_number, first_name, last_name, programme, level, session,
+             company_name, company_region, supervisor_name, supervisor_contact, supervisor_email, company_address
       FROM students_assumption
       WHERE index_number IN ($in_list)
       ORDER BY index_number
@@ -40,6 +41,10 @@ while ($row = mysqli_fetch_assoc($res)) {
         'session' => $row['session'] ?? '',
         'company_name' => $row['company_name'] ?? '',
         'company_region' => $row['company_region'] ?? '',
+        'supervisor_name' => $row['supervisor_name'] ?? '',
+        'supervisor_contact' => $row['supervisor_contact'] ?? '',
+        'supervisor_email' => $row['supervisor_email'] ?? '',
+        'company_address' => $row['company_address'] ?? '',
     ];
 }
 

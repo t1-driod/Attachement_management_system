@@ -9,6 +9,7 @@ interface AuthContextValue {
   login: (role: User['role'], payload: { name?: string; staffId?: string; indexNumber?: string; password?: string }) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -91,6 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => setError(null), []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await api.get<AuthCheckResponse>('/auth/check');
+      if (res.authenticated && res.user) {
+        const u: User = {
+          id: res.user.id,
+          name: res.user.name,
+          role: res.user.role as User['role'],
+          ...(res.user.staffId && { staffId: res.user.staffId }),
+          ...(res.user.indexNumber && { indexNumber: res.user.indexNumber }),
+        };
+        setUser(u);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+      }
+    } catch {
+      // keep current user
+    }
+  }, []);
+
   // Restore session from backend on load (if backend responds with authenticated)
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, clearError }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout, clearError, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

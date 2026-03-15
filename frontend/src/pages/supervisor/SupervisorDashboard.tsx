@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { BarChartCard } from '@/components/charts/BarChartCard';
@@ -16,10 +16,13 @@ const columns: Column<StudentSummary & { onGrade?: (student: StudentSummary) => 
     header: 'Student',
     align: 'left',
     render: (row) => (
-      <div className="text-left">
+      <Link
+        to={`/supervisor/student/${encodeURIComponent(row.student_index)}`}
+        className="block text-left hover:opacity-90"
+      >
         <p className="font-medium text-slate-900">{`${row.first_name} ${row.last_name}`.trim()}</p>
         <p className="text-xs text-slate-500">{row.student_index}</p>
-      </div>
+      </Link>
     ),
   },
   { key: 'company_name', header: 'Company', align: 'center' },
@@ -29,7 +32,12 @@ const columns: Column<StudentSummary & { onGrade?: (student: StudentSummary) => 
     header: 'Actions',
     align: 'center',
     render: (row) => (
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Link to={`/supervisor/student/${encodeURIComponent(row.student_index)}`}>
+          <Button variant="outline" size="sm">
+            View profile
+          </Button>
+        </Link>
         <Link to={`/supervisor/logbook/${encodeURIComponent(row.student_index)}`}>
           <Button variant="outline" size="sm">
             View logbook
@@ -48,6 +56,7 @@ const columns: Column<StudentSummary & { onGrade?: (student: StudentSummary) => 
 ];
 
 export function SupervisorDashboard() {
+  const location = useLocation();
   const [stats, setStats] = useState<SupervisorDashboardStats | null>(null);
   const [students, setStudents] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +75,16 @@ export function SupervisorDashboard() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, []);
+
+  // Open grading modal when navigated from student profile with state.gradeStudentIndex
+  useEffect(() => {
+    const state = location.state as { gradeStudentIndex?: string } | null;
+    const idx = state?.gradeStudentIndex;
+    if (idx && students.length > 0) {
+      const found = students.find((s) => s.student_index === idx);
+      if (found) setGradingStudent(found);
+    }
+  }, [location.state, students]);
 
   if (loading) return <p className="text-slate-500">Loading...</p>;
   if (error) return <p className="text-red-600">{error}</p>;

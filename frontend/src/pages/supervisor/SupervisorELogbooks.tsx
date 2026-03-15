@@ -18,23 +18,26 @@ const columns: Column<LogbookRow>[] = [
     key: 'student_name',
     header: 'Student',
     render: (row) => (
-      <div>
+      <Link to={`/supervisor/student/${encodeURIComponent(row.index_number)}`} className="block hover:opacity-90">
         <p className="font-medium text-slate-900">{row.student_name || '-'}</p>
         <p className="text-xs text-slate-500">{row.index_number}</p>
-      </div>
+      </Link>
     ),
   },
   { key: 'total_weeks', header: 'Weeks Completed', align: 'center' },
   {
-    key: 'index_number',
-    header: 'View logbook',
+    key: 'actions',
+    header: 'Actions',
     align: 'center',
     render: (row) => (
-      <Link to={`/supervisor/logbook/${encodeURIComponent(row.index_number)}`}>
-        <Button variant="outline" size="sm">
-          View logbook
-        </Button>
-      </Link>
+      <div className="flex flex-wrap justify-center gap-2">
+        <Link to={`/supervisor/student/${encodeURIComponent(row.index_number)}`}>
+          <Button variant="outline" size="sm">View profile</Button>
+        </Link>
+        <Link to={`/supervisor/logbook/${encodeURIComponent(row.index_number)}`}>
+          <Button variant="outline" size="sm">View logbook</Button>
+        </Link>
+      </div>
     ),
   },
 ];
