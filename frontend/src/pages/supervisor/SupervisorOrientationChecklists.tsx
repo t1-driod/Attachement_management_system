@@ -131,7 +131,7 @@ export function SupervisorOrientationChecklists() {
     setDetailError(null);
     try {
       // Reuse admin orientation-detail endpoint; ID already restricted by list API
-      const data = await api.get<ChecklistDetail>(`/admin/orientation-detail/${id}`);
+      const data = await api.get<ChecklistDetail>(`/admin/orientation-detail?id=${encodeURIComponent(id)}`);
       setSelected(data);
     } catch (e) {
       setDetailError(e instanceof Error ? e.message : 'Failed to load checklist details');

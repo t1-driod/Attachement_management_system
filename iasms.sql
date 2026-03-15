@@ -185,6 +185,22 @@ INSERT INTO `registered_students` (`id`, `first_name`, `last_name`, `index_numbe
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `student_profile_photos` (profile picture metadata; files in uploads/student_profiles/)
+--
+
+CREATE TABLE IF NOT EXISTS `student_profile_photos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `index_number` varchar(50) NOT NULL,
+  `filename` varchar(255) NOT NULL COMMENT 'File name on disk, e.g. R123456.jpg',
+  `content_type` varchar(100) NOT NULL DEFAULT 'image/jpeg',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index_number` (`index_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `students_assumption`
 --
 
@@ -346,6 +362,8 @@ CREATE TABLE `visiting_lecturers` (
   `lecturer_email` varchar(255) NOT NULL,
   `staff_id` varchar(100) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
+  `visiting_assessment_password` varchar(255) DEFAULT NULL COMMENT 'Password for this supervisor to open Visiting Supervisor Assessment from student portal',
+  `company_assessment_password` varchar(255) DEFAULT NULL COMMENT 'Password for company supervisors to open Company Supervisor Assessment from student portal',
   UNIQUE KEY `staff_id` (`staff_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

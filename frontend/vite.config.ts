@@ -19,6 +19,17 @@ export default defineConfig({
         target: 'http://localhost',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, '/iasms/api'),
+        configure: (proxy) => {
+          // Ensure POST body and multipart headers are forwarded (fixes file upload via proxy)
+          proxy.on('proxyReq', (proxyReq, req) => {
+            if (req.headers['content-type']) {
+              proxyReq.setHeader('Content-Type', req.headers['content-type']);
+            }
+            if (req.headers['content-length']) {
+              proxyReq.setHeader('Content-Length', req.headers['content-length']);
+            }
+          });
+        },
       },
     },
   },
