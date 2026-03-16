@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const supervisorSidebarItems: SidebarItem[] = [
   { to: 'dashboard', label: 'Dashboard' },
+  { to: 'passwords', label: 'Assessment passwords' },
   { to: 'orientation', label: 'Orientation checklists' },
   { to: 'elogbooks', label: 'E-logbooks' },
   { to: 'assumptions', label: 'Student assumptions' },

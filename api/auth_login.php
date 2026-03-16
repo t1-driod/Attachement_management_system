@@ -89,10 +89,13 @@ if ($role === 'supervisor') {
         return;
     }
     $row = mysqli_fetch_assoc($res);
+    session_regenerate_id(true);
     $_SESSION['role'] = 'supervisor';
     $_SESSION['user_id'] = $row['id'];
     $_SESSION['name'] = $row['lecturer_name'];
     $_SESSION['staff_id'] = $row['staff_id'];
+    require_once __DIR__ . '/supervisor_staff_cookie.php';
+    iasms_set_supervisor_staff_cookie($row['staff_id']);
     echo json_encode([
         'success' => true,
         'user' => [

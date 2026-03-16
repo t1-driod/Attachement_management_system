@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { LoginLayout } from '@/components/auth/LoginLayout';
 import { StudentSignupForm } from './StudentSignupForm';
 
 export function LoginPage() {
@@ -19,16 +19,11 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 px-4 overflow-hidden">
-      {/* Animated background orbs */}
-      <div className="pointer-events-none absolute inset-0 opacity-40">
-        <div className="absolute -left-32 top-10 h-72 w-72 rounded-full bg-primary-500 blur-3xl mix-blend-screen animate-pulse" />
-        <div className="absolute -right-40 bottom-0 h-72 w-72 rounded-full bg-emerald-500 blur-3xl mix-blend-screen animate-pulse delay-150" />
-      </div>
-
-      <Card className="relative z-10 w-full max-w-md" padding="lg">
-        <h1 className="mb-2 text-xl font-display font-semibold text-slate-800">Student Login</h1>
-        <p className="mb-6 text-sm text-slate-500">IASMS - Industrial Attachment Management</p>
+    <div className="relative min-h-screen">
+      <LoginLayout
+        cardTitle="Student Login"
+        cardSubtitle="IASMS - Industrial Attachment Management"
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="index" className="block text-sm font-medium text-slate-700">Index Number</label>
@@ -59,7 +54,7 @@ export function LoginPage() {
           <button
             type="button"
             onClick={() => setShowSignup(true)}
-            className="text-primary-100 hover:text-white hover:underline transition-colors"
+            className="text-primary-600 hover:underline transition-colors"
           >
             New here? Sign up
           </button>
@@ -68,11 +63,11 @@ export function LoginPage() {
             <a href="/supervisor/login" className="text-primary-600 hover:underline">Supervisor login</a>
           </div>
         </div>
-      </Card>
+      </LoginLayout>
 
       {showSignup && (
         <div
-          className="absolute inset-0 z-20 flex items-end justify-center bg-slate-900/60 backdrop-blur-sm"
+          className="fixed inset-0 z-20 flex items-end justify-center bg-slate-900/60 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && setShowSignup(false)}
         >
           <div className="w-full max-w-md px-4 pb-8 animate-slide-up">

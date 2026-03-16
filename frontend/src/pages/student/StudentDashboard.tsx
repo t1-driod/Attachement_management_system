@@ -3,15 +3,16 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/hooks/useAuth';
 
-const LEGACY_BASE = import.meta.env.DEV ? 'http://localhost/iasms' : '';
+const PROFILE_PHOTO_CACHE_KEY = 'iasms_profile_photo_updated';
 
 const quickLinks = [
   { to: '/student/instructions', label: 'Instructions', description: 'Read post-login instructions', external: false },
+  { to: '/student/register', label: 'Register', description: 'Register for industrial attachment', external: false },
+  { to: '/student/assumption', label: 'Submit Assumption', description: 'Submit assumption of duty form (company & supervisor)', external: false },
   { to: '/student/elogbook', label: 'E-Logbook', description: 'Submit weekly logbook entries', external: false },
   { to: '/student/orientation', label: 'Orientation Checklist', description: 'Complete orientation checklist', external: false },
-  { to: `${LEGACY_BASE}/submit_contract.php`, label: 'Submit Contract', description: 'Upload attachment contract', external: true },
-  { to: `${LEGACY_BASE}/submit_report/submit_report.php`, label: 'Submit Report', description: 'Upload final report', external: true },
-  { to: `${LEGACY_BASE}/student_assumption/student_assumption.php`, label: 'Student Assumption', description: 'Set company and region', external: true },
+  { to: '/student/contract', label: 'Submit Contract', description: 'Upload attachment contract', external: false },
+  { to: '/student/report', label: 'Submit Report', description: 'Upload final report', external: false },
 ];
 
 const supervisorAssessmentLinks = [
@@ -31,17 +32,45 @@ const supervisorAssessmentLinks = [
 
 export function StudentDashboard() {
   const { user } = useAuth();
+  const photoVersion = typeof localStorage !== 'undefined' ? localStorage.getItem(PROFILE_PHOTO_CACHE_KEY) ?? '' : '';
+  const profilePhotoUrl = user?.role === 'student'
+    ? `/api/student/profile/photo?t=${photoVersion}`
+    : null;
+  const initials = (user?.name ?? 'Student').trim().split(/\s+/).map((s) => s[0]).join('').toUpperCase().slice(0, 2) || '?';
 
   return (
     <div className="space-y-10">
       {/* Welcome header */}
-      <div className="rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 px-6 py-8 text-white shadow-lg">
-        <h1 className="text-2xl font-display font-bold tracking-tight md:text-3xl">
-          Welcome back, {user?.name ?? 'Student'}
-        </h1>
-        <p className="mt-2 text-primary-100">
-          Industrial attachment tasks and links
-        </p>
+      <div className="flex flex-col items-start gap-6 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 px-6 py-8 text-white shadow-lg sm:flex-row sm:items-center">
+        <div className="relative flex h-20 w-20 shrink-0 overflow-hidden rounded-full ring-2 ring-white/50">
+          {profilePhotoUrl ? (
+            <img
+              src={profilePhotoUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                const el = e.currentTarget;
+                el.style.display = 'none';
+                const fallback = el.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div
+            className="flex h-full w-full items-center justify-center bg-primary-500 text-2xl font-semibold"
+            style={profilePhotoUrl ? { display: 'none' } : undefined}
+          >
+            {initials}
+          </div>
+        </div>
+        <div>
+          <h1 className="text-2xl font-display font-bold tracking-tight md:text-3xl">
+            Welcome {user?.name ?? 'Student'}
+          </h1>
+          <p className="mt-2 text-primary-100">
+            Industrial attachment tasks and links
+          </p>
+        </div>
       </div>
 
       {/* Supervisor assessments – where supervisors enter marks */}

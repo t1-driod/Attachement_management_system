@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Button } from '@/components/ui/Button';
@@ -14,12 +15,46 @@ interface StudentRow {
 }
 
 const columns: Column<StudentRow>[] = [
-  { key: 'index_number', header: 'Index Number' },
-  { key: 'first_name', header: 'First Name' },
+  {
+    key: 'index_number',
+    header: 'Index Number',
+    render: (row) => (
+      <Link
+        to={`/admin/students/${encodeURIComponent(row.index_number)}`}
+        className="font-medium text-primary-600 hover:underline"
+      >
+        {row.index_number}
+      </Link>
+    ),
+  },
+  {
+    key: 'first_name',
+    header: 'First Name',
+    render: (row) => (
+      <Link
+        to={`/admin/students/${encodeURIComponent(row.index_number)}`}
+        className="text-slate-800 hover:text-primary-600 hover:underline"
+      >
+        {row.first_name}
+      </Link>
+    ),
+  },
   { key: 'last_name', header: 'Last Name' },
   { key: 'programme', header: 'Programme' },
   { key: 'level', header: 'Level' },
   { key: 'session', header: 'Session' },
+  {
+    key: 'actions',
+    header: 'Actions',
+    align: 'center',
+    render: (row) => (
+      <Link to={`/admin/students/${encodeURIComponent(row.index_number)}`}>
+        <Button variant="outline" size="sm">
+          View profile
+        </Button>
+      </Link>
+    ),
+  },
 ];
 
 export function RegisteredStudents() {

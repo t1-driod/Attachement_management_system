@@ -130,7 +130,7 @@ export function OrientationChecklists() {
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const data = await api.get<ChecklistDetail>(`/admin/orientation-detail/${id}`);
+      const data = await api.get<ChecklistDetail>(`/admin/orientation-detail?id=${encodeURIComponent(id)}`);
       setSelected(data);
     } catch (e) {
       setDetailError(e instanceof Error ? e.message : 'Failed to load checklist details');

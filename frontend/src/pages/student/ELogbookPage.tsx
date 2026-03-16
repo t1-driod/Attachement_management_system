@@ -178,7 +178,7 @@ export function ELogbookPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-100 p-4">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-100 p-4 shadow-md">
         <span className="font-medium text-slate-700">Weeks:</span>
         {weekNumbers.length === 0 && <span className="text-slate-500">No weeks yet. Start with Week 1 below.</span>}
         {weekNumbers.map((w) => (
@@ -200,7 +200,7 @@ export function ELogbookPage() {
         </Button>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 shadow-lg">
         <h2 className="mb-4 text-lg font-semibold text-slate-800">Week {currentWeek}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="overflow-x-auto">

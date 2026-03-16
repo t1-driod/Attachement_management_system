@@ -1,0 +1,106 @@
+<?php
+/**
+ * GET: Full profile for one student. Only allowed if student is assigned to current supervisor.
+ * Route: /supervisor/student-profile/{index_number}
+ */
+
+require_once __DIR__ . '/supervisor_helpers.php';
+
+if (($_SESSION['role'] ?? '') !== 'supervisor') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Not authorized']);
+    return;
+}
+
+$index_number = isset($segments[2]) ? trim(urldecode($segments[2])) : '';
+if ($index_number === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Index number required']);
+    return;
+}
+
+$assigned = iasms_get_assigned_indexes_for_current_supervisor($conn);
+if (!in_array($index_number, $assigned, true)) {
+    http_response_code(404);
+    echo json_encode(['error' => 'Student not assigned to you']);
+    return;
+}
+
+$idx = mysqli_real_escape_string($conn, $index_number);
+
+// Registration (industrial_registration)
+$reg = null;
+$rq = "SELECT first_name, last_name, other_name, index_number, programme, level, session, faculty, date,
+       company_supervisor_name, company_supervisor_contact, attachment_region,
+       visiting_supervisor_grade, company_supervisor_grade
+       FROM industrial_registration WHERE index_number='$idx' LIMIT 1";
+$rr = mysqli_query($conn, $rq);
+if ($rr && mysqli_num_rows($rr) === 1) {
+    $reg = mysqli_fetch_assoc($rr);
+}
+
+// Assumption (students_assumption)
+$assump = null;
+$aq = "SELECT company_name, supervisor_name, supervisor_contact, supervisor_email, company_region, company_address
+       FROM students_assumption WHERE index_number='$idx' LIMIT 1";
+$ar = mysqli_query($conn, $aq);
+if ($ar && mysqli_num_rows($ar) === 1) {
+    $assump = mysqli_fetch_assoc($ar);
+}
+
+// Contract (latest)
+$contract = null;
+$cq = "SELECT id, original_filename, status, submission_date, admin_comment
+       FROM student_contracts WHERE index_number='$idx' ORDER BY submission_date DESC LIMIT 1";
+$cr = mysqli_query($conn, $cq);
+if ($cr && mysqli_num_rows($cr) === 1) {
+    $contract = mysqli_fetch_assoc($cr);
+}
+
+// Orientation (summary for this student)
+$orientation = null;
+$oq = "SELECT id, completed_at FROM orientation_checklist WHERE index_number='$idx' ORDER BY completed_at DESC LIMIT 1";
+$or = mysqli_query($conn, $oq);
+if ($or && mysqli_num_rows($or) === 1) {
+    $row = mysqli_fetch_assoc($or);
+    $orientation = ['id' => (int)$row['id'], 'completed_at' => $row['completed_at'] ?? null];
+}
+
+// Logbook: count and latest week
+$logbook = ['count' => 0, 'latest_week' => null];
+$lq = "SELECT COUNT(*) AS c, MAX(week_number) AS max_week FROM elogbook_entries WHERE index_number='$idx'";
+$lr = mysqli_query($conn, $lq);
+if ($lr && ($row = mysqli_fetch_assoc($lr))) {
+    $logbook['count'] = (int)($row['c'] ?? 0);
+    $logbook['latest_week'] = $row['max_week'] !== null ? (int)$row['max_week'] : null;
+}
+
+// Report: whether student has submitted (by filename in submit_report/uploads)
+$report_submitted = false;
+$uploads_dir = dirname(__DIR__) . '/submit_report/uploads';
+if (is_dir($uploads_dir)) {
+    $files = array_diff(scandir($uploads_dir), ['.', '..']);
+    $base_want = $index_number;
+    $base_alt = str_replace(['/', '\\'], ['_', '_'], $index_number);
+    foreach ($files as $f) {
+        $path = $uploads_dir . DIRECTORY_SEPARATOR . $f;
+        if (!is_file($path)) continue;
+        $base = pathinfo($f, PATHINFO_FILENAME);
+        if ($base === $base_want || $base === $base_alt) {
+            $report_submitted = true;
+            break;
+        }
+    }
+}
+
+$out = [
+    'index_number' => $index_number,
+    'registration' => $reg,
+    'assumption' => $assump,
+    'contract' => $contract,
+    'orientation' => $orientation,
+    'logbook' => $logbook,
+    'report_submitted' => $report_submitted,
+];
+
+echo json_encode($out);
